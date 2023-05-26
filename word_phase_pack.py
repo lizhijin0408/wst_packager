@@ -737,7 +737,7 @@ def wst_decode(param):
         encoder_type = struct.unpack('<H', file_p.read(2))[0]
         encoder_tag = struct.unpack('<H', file_p.read(2))[0]
         real_encoder_tag = compute_real_tag(encoder_type, encoder_tag)
-        print(f'real_encoder_tag: {encoder_type}, {encoder_tag} -> {real_encoder_tag}')
+        # print(f'real_encoder_tag: {encoder_type}, {encoder_tag} -> {real_encoder_tag}')
 
         # 版本号
         # file_p.seek(BOOK_VERSION_POS, 0)
@@ -758,9 +758,17 @@ def wst_decode(param):
         package_name = read_data_from_file(file_p, BOOK_NAME_LEN, real_encoder_tag)
         print(f'package name: {package_name}')
 
-        chapters_cnt = struct.unpack('<I', file_p.read(4))[0]
-        chapters_cnt ^= real_encoder_tag
-        print(f'章节数：{chapters_cnt}')
+        chapters_data = struct.unpack('<I', file_p.read(4))[0] ^ real_encoder_tag
+        chapters_cnt = chapters_data & 0xFFFF
+        chapters_lan = (chapters_data & 0xF0000) >> 16
+        if chapters_lan == 1:
+            language = '中文书籍'
+        elif chapters_lan == 2:
+            language = '英文书籍'
+        else:
+            print(f'未知书籍 {chapters_lan}')
+            return
+        print(f'{language} 章节数：{chapters_cnt}')
 
         head_pos = file_p.tell()
         for i in range(chapters_cnt):
@@ -845,6 +853,10 @@ def wst_decode(param):
                 file_p.seek(p_j_audio_cnt * 8, 1)
                 print(f'开始读取第{i + 1}章节第{j + 1}个词 音频个数：{p_j_audio_cnt}')
 
+                p_j_daudio_cnt = struct.unpack('<I', file_p.read(4))[0] ^ real_encoder_tag
+                file_p.seek(p_j_daudio_cnt * 8, 1)
+                print(f'开始读取第{i + 1}章节第{j + 1}个词 听写音频个数：{p_j_daudio_cnt}')
+
                 p_j_shiyi_cnt = struct.unpack('<I', file_p.read(4))[0] ^ real_encoder_tag
                 p_j_shiyi_pos_list = []
                 p_j_shiyi_len_list = []
@@ -904,6 +916,10 @@ def wst_decode(param):
 
 def wst_gen(param, old_pack_name, try_no):
     book_version = 0
+    lang_en = 0
+    lang_cn = 1
+    lang_null = -1
+    language = lang_null
     try:
         if (old_pack_name != "new"):
             print("开始校验旧包")
@@ -994,6 +1010,12 @@ def wst_gen(param, old_pack_name, try_no):
 
                         daudios = word.get('daudio')
                         if daudios:
+                            if language == lang_null:
+                                print('中文书籍')
+                                language = lang_cn
+                            if language == lang_en:
+                                print('英文书籍不支持听写音频')
+                                return
                             word_item['daudio'] = []
                             for daudio in daudios:
                                 if not isinstance(daudio, str):
@@ -1016,6 +1038,12 @@ def wst_gen(param, old_pack_name, try_no):
 
                         pinyin = word.get('pinyin')
                         if pinyin:
+                            if language == lang_null:
+                                print('中文书籍')
+                                language = lang_cn
+                            if language == lang_en:
+                                print('英文书籍不支持拼音')
+                                return
                             if not isinstance(pinyin, str):
                                 print(f'Error {pinyin} 不是一个合法的拼音')
                                 res_errno += 1
@@ -1028,6 +1056,12 @@ def wst_gen(param, old_pack_name, try_no):
 
                         zucis = word.get('zuci')
                         if zucis:
+                            if language == lang_null:
+                                print('中文书籍')
+                                language = lang_cn
+                            if language == lang_en:
+                                print('英文书籍不支持组词')
+                                return
                             word_item['zuci'] = []
                             for zuci in zucis:
                                 if not isinstance(zuci, str):
@@ -1041,9 +1075,34 @@ def wst_gen(param, old_pack_name, try_no):
                             pass
                         chapter.insert_newWord(word_item)
 
+                        trans = word.get('shiyi')
+                        if trans:
+                            if language == lang_null:
+                                print('英文书籍')
+                                language = lang_en
+                            if language == lang_cn:
+                                print('中文书籍不支持释义')
+                                return
+                            word_item['zuci'] = []
+                            if not isinstance(trans, str):
+                                print(f'Error {trans} 不是一个合法的释义')
+                                res_errno += 1
+                                break
+                            word_item['zuci'].append(trans.strip())
+                        else:
+                            # print(f'字[{text}] 没有组词')
+                            pass
+                        chapter.insert_newWord(word_item)
+
                     newPhases = json_data.get('newPhase')
                     # print(f'词个数({len(newPhases)}): {newPhases}')
                     for phase in newPhases:
+                        if language == lang_null:
+                            print('中文书籍')
+                            language = lang_cn
+                        if language == lang_en:
+                            print('英文书籍不支持词组')
+                            return
                         phase_item = {}
                         text = phase.get('text')
                         if text:
@@ -1080,6 +1139,28 @@ def wst_gen(param, old_pack_name, try_no):
                             # print(f'词[{text}] 没有发音音频')
                             pass
 
+                        daudios = phase.get('daudio')
+                        if daudios:
+                            phase_item['daudio'] = []
+                            for daudio in daudios:
+                                if not isinstance(daudio, str):
+                                    # print(f'{daudio} 不是一个合法的音频文件名')
+                                    continue
+                                daudio_path = audio_dir + g_sep + daudio
+                                if os.path.isdir(daudio_path) or not daudio_path.endswith('.mp3'):
+                                    print(f'Error {daudio_path} 不是mp3文件')
+                                    res_errno += 1
+                                    break
+                                if not os.path.exists(daudio_path):
+                                    print(f'Error {daudio_path} 文件不存在')
+                                    res_errno += 1
+                                    break
+                                # print(f'{audio_path}音频文件检测OK')
+                                phase_item['daudio'].append(daudio)
+                        else:
+                            # print(f'词[{text}] 没有听写音频')
+                            pass
+
                         pinyin = phase.get('pinyin')
                         if pinyin:
                             if not isinstance(pinyin, str):
@@ -1095,13 +1176,11 @@ def wst_gen(param, old_pack_name, try_no):
                         shiyis = phase.get('shiyi')
                         if shiyis:
                             phase_item['shiyi'] = []
-                            for shiyi in shiyis:
-                                if not isinstance(shiyi, str):
-                                    print(f'Error {shiyi} 不是一个合法的释义')
-                                    res_errno += 1
-                                    break
-                                # print(f'组词: {shiyi.strip()}')
-                                phase_item['shiyi'].append(shiyi.strip())
+                            if not isinstance(shiyis, str):
+                                print(f'Error {shiyis} 不是一个合法的释义')
+                                res_errno += 1
+                                break
+                            phase_item['shiyi'].append(shiyis.strip())
                         else:
                             # print(f'词[{text}] 没有释义')
                             pass
@@ -1267,6 +1346,10 @@ def wst_gen(param, old_pack_name, try_no):
 
         # 章节数量统计
         res_total_no = len(chapters)
+        if language == lang_cn:
+            res_total_no += 0x10000
+        else:
+            res_total_no += 0x20000
         write_data = res_total_no ^ real_encoder_tag
         check_sum += (write_data & 0xffff)
         check_sum += ((write_data & 0xffff0000) >> 16)
@@ -1339,7 +1422,7 @@ def wst_gen(param, old_pack_name, try_no):
             word_addr_pos = []
             word_pinyin_addr_pos = []
             word_audio_list = []
-            dword_audio_list = []
+            word_daudio_list = []
             word_zuci_list = []
             for iw in range(word_num):
                 # print(f'预留 在位置：{ziyou_file.tell()} 写入第{i + 1}章节 第{iw + 1}个字信息')
@@ -1391,17 +1474,17 @@ def wst_gen(param, old_pack_name, try_no):
                 check_sum += ((write_data & 0xffff0000) >> 16)
                 check_len += 4
                 ziyou_file.write(write_data.to_bytes(length=4, byteorder='little', signed=False))
-                dword_audio_pos = []
+                word_daudio_pos = []
                 for a in range(daudios_num):
                     # 预留 地址，音频地址 长度
                     cur_pos = ziyou_file.tell()
-                    dword_audio_pos.append(cur_pos)
+                    word_daudio_pos.append(cur_pos)
                     zhanwei_list.append(cur_pos)
                     zhanwei_list.append(cur_pos + 4)
                     # print(f'预留 第{i+1}章节 第{iw+1}个字 第{a+1} 个音频信息在位置：{cur_pos}')
                     ziyou_file.write(b"\xff" * (4))  # 占位
                     ziyou_file.write(b"\xff" * (4))
-                dword_audio_list.append(dword_audio_pos)
+                word_daudio_list.append(word_daudio_pos)
 
                 # 组词个数
                 zucis = new_words[iw].get('zuci')
@@ -1429,7 +1512,7 @@ def wst_gen(param, old_pack_name, try_no):
             words_addr_list.append(word_addr_pos)
             words_pinyin_addr_list.append(word_pinyin_addr_pos)
             words_audio_addr_post_list.append(word_audio_list)
-            words_daudio_addr_post_list.append(dword_audio_list)
+            words_daudio_addr_post_list.append(word_daudio_list)
             words_zuci_addr_post_list.append(word_zuci_list)
 
         # 词信息
@@ -1438,6 +1521,7 @@ def wst_gen(param, old_pack_name, try_no):
         phase_pinyin_addr_list = []    #拼音
 
         phase_audio_addr_post_list = []  #音频位置，3层 章节->词->1个词可能有多个音频
+        phase_daudio_addr_post_list = []  #音频位置，3层 章节->词->1个词可能有多个音频
         phase_shiyi_addr_post_list = []  #组词位置，3层 章节->词->1个词可能有多个组词
 
         # 写词描述信息
@@ -1465,6 +1549,7 @@ def wst_gen(param, old_pack_name, try_no):
             phase_addr_pos = []
             phase_pinyin_addr_pos = []
             phase_audio_list = []
+            phase_daudio_list = []
             phase_shiyi_list = []
             for iw in range(phase_num):
                 # print(f'预留 在位置：{ziyou_file.tell()} 写入第{i + 1}章节 第{iw + 1}个词信息')
@@ -1505,6 +1590,28 @@ def wst_gen(param, old_pack_name, try_no):
                     ziyou_file.write(b"\xff" * (4))
                 phase_audio_list.append(phase_audio_pos)
 
+                # 听写音频个数
+                daudios = new_phase[iw].get('daudio')
+                daudios_num = 0
+                if daudios:
+                    daudios_num = len(daudios)
+                write_data = daudios_num ^ real_encoder_tag
+                check_sum += (write_data & 0xffff)
+                check_sum += ((write_data & 0xffff0000) >> 16)
+                check_len += 4
+                ziyou_file.write(write_data.to_bytes(length=4, byteorder='little', signed=False))
+                phase_daudio_pos = []
+                for a in range(daudios_num):
+                    # 预留 地址，音频地址 长度
+                    cur_pos = ziyou_file.tell()
+                    zhanwei_list.append(cur_pos)
+                    zhanwei_list.append(cur_pos + 4)
+                    phase_daudio_pos.append(ziyou_file.tell())
+                    # print(f'预留 第{i+1}章节 第{iw+1}个词 第{a+1} 个音频信息在位置：{ziyou_file.tell()}')
+                    ziyou_file.write(b"\xff" * (4))  # 占位
+                    ziyou_file.write(b"\xff" * (4))
+                phase_daudio_list.append(phase_daudio_pos)
+
                 # 组词个数
                 shiyis = new_phase[iw].get('shiyi')
                 shiyis_num = 0
@@ -1531,6 +1638,7 @@ def wst_gen(param, old_pack_name, try_no):
             phase_addr_list.append(phase_addr_pos)
             phase_pinyin_addr_list.append(phase_pinyin_addr_pos)
             phase_audio_addr_post_list.append(phase_audio_list)
+            phase_daudio_addr_post_list.append(phase_daudio_list)
             phase_shiyi_addr_post_list.append(phase_shiyi_list)
 
         # 跟读信息
@@ -1790,7 +1898,7 @@ def wst_gen(param, old_pack_name, try_no):
                             # print(f'写音频 {audio_path} -> {ziyou_file.tell()}')
                             daudio_sub_w_pos.append(ziyou_file.tell())
                             data_len = os.path.getsize(daudio_path)
-                            audio_sub_w_len.append(data_len)
+                            daudio_sub_w_len.append(data_len)
                             # 写音频记录
                             write_mp3_dict[daudio_path] = {}
                             write_mp3_dict[daudio_path]['pos'] = ziyou_file.tell()
@@ -1827,6 +1935,9 @@ def wst_gen(param, old_pack_name, try_no):
         phase_audio_write_pos_list = []
         phase_audio_write_len_list = []
 
+        phase_daudio_write_pos_list = []
+        phase_daudio_write_len_list = []
+
         for i in range(len(chapters)):
             chapter = chapters[i]
             phases = chapter.get_newPhase()
@@ -1841,6 +1952,9 @@ def wst_gen(param, old_pack_name, try_no):
 
             audio_write_pos = []
             audio_write_len = []
+
+            daudio_write_pos = []
+            daudio_write_len = []
 
             for iw in range(len(phases)):
                 txt = phases[iw].get('text')
@@ -1925,6 +2039,36 @@ def wst_gen(param, old_pack_name, try_no):
                 audio_write_pos.append(audio_sub_w_pos)
                 audio_write_len.append(audio_sub_w_len)
 
+                # 词 听写音频内容
+                daudios = phases[iw].get('daudio')
+                audio_prefix = chapter.get_audio_dir()
+                daudio_sub_w_pos = []
+                daudio_sub_w_len = []
+                if daudios:
+                    daudio_cnt = len(daudios)
+                    for iz in range(daudio_cnt):
+                        daudio_path = audio_prefix + daudios[iz]
+                        mp3_write = write_mp3_dict.get(daudio_path)
+                        if mp3_write:
+                            mp3_pos = mp3_write.get('pos')
+                            daudio_sub_w_pos.append(mp3_pos)
+                            daudio_sub_w_len.append(mp3_write.get('len'))
+                            # print(f'{audio_path} 已经写过，使用上个地址 {mp3_pos}')
+                        else:
+                            # print(f'写音频 {audio_path} -> {ziyou_file.tell()}')
+                            daudio_sub_w_pos.append(ziyou_file.tell())
+                            data_len = os.path.getsize(daudio_path)
+                            daudio_sub_w_len.append(data_len)
+                            # 写音频记录
+                            write_mp3_dict[daudio_path] = {}
+                            write_mp3_dict[daudio_path]['pos'] = ziyou_file.tell()
+                            write_mp3_dict[daudio_path]['len'] = data_len
+                            # 写音频
+                            write_filedata_to_file(ziyou_file, daudio_path, data_len, real_encoder_tag)
+
+                daudio_write_pos.append(daudio_sub_w_pos)
+                daudio_write_len.append(daudio_sub_w_len)
+
             phase_txt_write_pos_list.append(txt_write_pos)
             phase_txt_write_len_list.append(txt_write_len)
             phase_pinyin_write_pos_list.append(pinyin_write_pos)
@@ -1933,6 +2077,8 @@ def wst_gen(param, old_pack_name, try_no):
             phase_shiyi_write_len_list.append(shiyi_write_len)
             phase_audio_write_pos_list.append(audio_write_pos)
             phase_audio_write_len_list.append(audio_write_len)
+            phase_daudio_write_pos_list.append(daudio_write_pos)
+            phase_daudio_write_len_list.append(daudio_write_len)
 
         # 写 跟读 内容
         sentence_txt_write_pos_list = []
@@ -2237,6 +2383,10 @@ def wst_gen(param, old_pack_name, try_no):
             audio_write_pos = phase_audio_write_pos_list[i]
             audio_write_len = phase_audio_write_len_list[i]
 
+            phase_daudio_list = phase_daudio_addr_post_list[i]
+            daudio_write_pos = phase_daudio_write_pos_list[i]
+            daudio_write_len = phase_daudio_write_len_list[i]
+
             phase_shiyi_list = phase_shiyi_addr_post_list[i]
             shiyi_write_pos = phase_shiyi_write_pos_list[i]
             shiyi_write_len = phase_shiyi_write_len_list[i]
@@ -2252,6 +2402,10 @@ def wst_gen(param, old_pack_name, try_no):
                 phase_audio_pos = phase_audio_list[j]
                 audio_sub_w_pos = audio_write_pos[j]
                 audio_sub_w_len = audio_write_len[j]
+
+                phase_daudio_pos = phase_daudio_list[j]
+                daudio_sub_w_pos = daudio_write_pos[j]
+                daudio_sub_w_len = daudio_write_len[j]
 
                 phase_shiyi_pos = phase_shiyi_list[j]
                 shiyi_sub_w_pos = shiyi_write_pos[j]
@@ -2331,6 +2485,32 @@ def wst_gen(param, old_pack_name, try_no):
 
                     zhanwei_list.remove(audio_pos)
                     zhanwei_list.remove(audio_pos + 4)
+
+                # 词 听写音频位置
+                daudios = new_phase[j].get('daudio')
+                daudios_cnt = 0
+                if daudios:
+                    daudios_cnt = len(daudios)
+                for k in range(daudios_cnt):
+                    daudio_pos = phase_daudio_pos[k]
+                    daudio_w_pos = daudio_sub_w_pos[k]
+                    daudio_w_len = daudio_sub_w_len[k]
+                    ziyou_file.seek(daudio_pos, 0)
+
+                    write_data = daudio_w_pos ^ real_encoder_tag
+                    check_sum += (write_data & 0xffff)
+                    check_sum += ((write_data & 0xffff0000) >> 16)
+                    check_len += 4
+                    ziyou_file.write(write_data.to_bytes(length=4, byteorder='little', signed=False))
+
+                    write_data = daudio_w_len ^ real_encoder_tag
+                    check_sum += (write_data & 0xffff)
+                    check_sum += ((write_data & 0xffff0000) >> 16)
+                    check_len += 4
+                    ziyou_file.write(write_data.to_bytes(length=4, byteorder='little', signed=False))
+
+                    zhanwei_list.remove(daudio_pos)
+                    zhanwei_list.remove(daudio_pos + 4)
 
                 # 词 释义位置
                 shiyis = new_phase[j].get('shiyi')
