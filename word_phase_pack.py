@@ -737,7 +737,7 @@ def wst_decode(param):
         encoder_type = struct.unpack('<H', file_p.read(2))[0]
         encoder_tag = struct.unpack('<H', file_p.read(2))[0]
         real_encoder_tag = compute_real_tag(encoder_type, encoder_tag)
-        # print(f'real_encoder_tag: {encoder_type}, {encoder_tag} -> {real_encoder_tag}')
+        print('real_encoder_tag: %x, %x -> %x' % (encoder_type, encoder_tag, real_encoder_tag))
 
         # 版本号
         # file_p.seek(BOOK_VERSION_POS, 0)
@@ -970,7 +970,7 @@ def wst_gen(param, old_pack_name, try_no):
                     with open(json_file, 'r', encoding='utf-8') as f:
                         json_data = json.loads(f.read())
                     newWords = json_data.get('newWord')
-                    # print(f'字个数({len(newWords)}): {newWords}')
+                    print(f'字个数({len(newWords)}): {newWords}')
                     for word in newWords:
                         word_item = {}
                         text = word.get('text')
@@ -1008,7 +1008,7 @@ def wst_gen(param, old_pack_name, try_no):
                             # print(f'字[{text}] 没有发音音频')
                             pass
 
-                        daudios = word.get('daudio')
+                        daudios = word.get('dictation_audio')
                         if daudios:
                             if language == lang_null:
                                 print('中文书籍')
@@ -1017,6 +1017,7 @@ def wst_gen(param, old_pack_name, try_no):
                                 print('英文书籍不支持听写音频')
                                 return
                             word_item['daudio'] = []
+                            print(f'{text}听写音频个数{len(daudios)}')
                             for daudio in daudios:
                                 if not isinstance(daudio, str):
                                     # print(f'{daudio} 不是一个合法的音频文件名')
@@ -1073,7 +1074,6 @@ def wst_gen(param, old_pack_name, try_no):
                         else:
                             # print(f'字[{text}] 没有组词')
                             pass
-                        chapter.insert_newWord(word_item)
 
                         trans = word.get('shiyi')
                         if trans:
@@ -1095,7 +1095,7 @@ def wst_gen(param, old_pack_name, try_no):
                         chapter.insert_newWord(word_item)
 
                     newPhases = json_data.get('newPhase')
-                    # print(f'词个数({len(newPhases)}): {newPhases}')
+                    print(f'词个数({len(newPhases)}): {newPhases}')
                     for phase in newPhases:
                         if language == lang_null:
                             print('中文书籍')
@@ -1139,7 +1139,7 @@ def wst_gen(param, old_pack_name, try_no):
                             # print(f'词[{text}] 没有发音音频')
                             pass
 
-                        daudios = phase.get('daudio')
+                        daudios = phase.get('dictation_audio')
                         if daudios:
                             phase_item['daudio'] = []
                             for daudio in daudios:
@@ -1176,18 +1176,19 @@ def wst_gen(param, old_pack_name, try_no):
                         shiyis = phase.get('shiyi')
                         if shiyis:
                             phase_item['shiyi'] = []
-                            if not isinstance(shiyis, str):
-                                print(f'Error {shiyis} 不是一个合法的释义')
-                                res_errno += 1
-                                break
-                            phase_item['shiyi'].append(shiyis.strip())
+                            for shiyi in shiyis:
+                                if not isinstance(shiyi, str):
+                                    print(f'Error {shiyi} 不是一个合法的释义')
+                                    res_errno += 1
+                                    break
+                                phase_item['shiyi'].append(shiyi.strip())
                         else:
                             # print(f'词[{text}] 没有释义')
                             pass
                         chapter.insert_newPhase(phase_item)
 
                     newSentences = json_data.get('newSentence')
-                    # print(f'跟读({len(newSentences)}): {newSentences}')
+                    print(f'跟读({len(newSentences)}): {newSentences}')
                     for newSentence in newSentences:
                         # print(newSentence)
                         sentence_item = {}
@@ -1223,7 +1224,7 @@ def wst_gen(param, old_pack_name, try_no):
                                 return
 
                     recites = json_data.get('recite')
-                    # print(f'背诵个数({len(recites)}): {recites}')
+                    print(f'背诵个数({len(recites)}): {recites}')
                     for recite in recites:
                         recite_item = {}
                         timeStart = recite.get('timeStart')
@@ -2598,11 +2599,12 @@ def wst_gen(param, old_pack_name, try_no):
     #     print(f"[生成出错]写入数据段1出错: {e}")
     #     return
 
-def usage():
-    print("wrong used")
+def usage(info):
+    print("wrong used:", info)
 
 
 if __name__ == "__main__":
+    print(sys.argv)
     if (2 == len(sys.argv)):
         if os.path.isdir(sys.argv[1]):
             wst_gen(sys.argv[1], "new", 0)
