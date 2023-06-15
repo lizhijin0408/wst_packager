@@ -965,7 +965,7 @@ def wst_gen(param, old_pack_name, try_no):
                 # if not os.path.isdir(audio_dir):
                 #     print(f'{sub_dir_name} 没有音频目录')
                 #     continue
-                chapter = Chapter(sub_dir, audio_dir + g_sep)
+                chapter = Chapter(sub_dir[3:], audio_dir + g_sep)
                 try:
                     with open(json_file, 'r', encoding='utf-8') as f:
                         json_data = json.loads(f.read())
