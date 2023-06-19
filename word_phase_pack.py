@@ -947,7 +947,8 @@ def wst_gen(param, old_pack_name, try_no):
     try:
         # check资源
         print("开始校验数据")
-        all_dirs = os.listdir(param)
+        data_parm = param + g_sep + 'StudyPackage'
+        all_dirs = os.listdir(data_parm)
         all_dirs.sort(key=sort_file_dir)
         res_errno = 0
         lrc_errno = 0
@@ -955,7 +956,7 @@ def wst_gen(param, old_pack_name, try_no):
         test_errno = 0
         chapters = []
         for sub_dir in all_dirs:
-            sub_dir_name = param + g_sep + sub_dir + g_sep
+            sub_dir_name = data_parm + g_sep + sub_dir + g_sep
             if os.path.isdir(sub_dir_name):
                 json_file = sub_dir_name + sub_dir + '.json'
                 audio_dir = sub_dir_name + 'audio'
@@ -1280,6 +1281,7 @@ def wst_gen(param, old_pack_name, try_no):
         #############################
         params_list = param.split(g_sep)
         book_filename = params_list[-1]
+        print(f'=======文件名： {book_filename} ============')
         if (1 == try_no):
             ziyou_file_name = param + g_sep + book_filename + "_try_v" + str(book_version) + BOOK_SUFFIX_NAME
         else:
