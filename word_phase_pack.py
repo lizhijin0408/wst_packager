@@ -920,6 +920,8 @@ def wst_gen(param, old_pack_name, try_no):
     lang_cn = 1
     lang_null = -1
     language = lang_null
+    warning_msg = ''
+    warn_cnt = 0
     try:
         if (old_pack_name != "new"):
             print("开始校验旧包")
@@ -958,14 +960,42 @@ def wst_gen(param, old_pack_name, try_no):
         for sub_dir in all_dirs:
             sub_dir_name = data_parm + g_sep + sub_dir + g_sep
             if os.path.isdir(sub_dir_name):
-                json_file = sub_dir_name + sub_dir + '.json'
+                config_no = 0
+                json_name = ''
+                for filename in os.listdir(sub_dir_name):
+                    if not os.path.isdir((sub_dir_name + g_sep + filename)):
+                        if (filename.endswith('.json')):
+                            config_no += 1
+                            json_name = filename
+                # json_file = sub_dir_name + sub_dir + '.json'
                 audio_dir = sub_dir_name + 'audio'
-                if not os.path.exists(json_file):
-                    print(f'{sub_dir_name} 缺少json文件 {json_file}')
+                if config_no != 1:
+                    warn_info = f'{sub_dir_name} json配置个数不对'
+                    print(warn_info)
+                    warning_msg += warn_info
+                    warning_msg += '\r\n'
+                    warn_cnt += 1
                     continue
-                # if not os.path.isdir(audio_dir):
-                #     print(f'{sub_dir_name} 没有音频目录')
-                #     continue
+
+                json_file = sub_dir_name + g_sep + json_name
+                if not os.path.exists(json_file):
+                    # print(f'{sub_dir_name} 缺少json文件 {json_file}')
+                    warn_info = f'{sub_dir_name} 缺少json文件 {json_file}'
+                    print(warn_info)
+                    warning_msg += warn_info
+                    warning_msg += '\r\n'
+                    warn_cnt += 1
+                    continue
+
+                if json_name[:3] != sub_dir[:3]:
+                    # print(f'{sub_dir_name} json文件名和目录名成不匹配 {json_name} -> {sub_dir}')
+                    warn_info = f'{sub_dir_name} json文件名和目录名成不匹配 {json_name} -> {sub_dir}'
+                    print(warn_info)
+                    warning_msg += warn_info
+                    warning_msg += '\r\n'
+                    warn_cnt += 1
+                    continue
+
                 chapter = Chapter(sub_dir[3:], audio_dir + g_sep)
                 try:
                     with open(json_file, 'r', encoding='utf-8') as f:
@@ -2597,6 +2627,8 @@ def wst_gen(param, old_pack_name, try_no):
         print('校验 {%d} {%x}' % (check_len, check_sum))
         ziyou_file.close()
         print("数据写入完成")
+        if warn_cnt > 0:
+            print('有警告消息，请确认:', warning_msg)
     # except BaseException as e:
     #     print(f"[生成出错]写入数据段1出错: {e}")
     #     return
