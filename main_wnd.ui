@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>842</width>
+    <height>430</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>自动操作工具</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,1">
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="1" column="0">
+          <widget class="QPushButton" name="pushButton">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(0, 170, 0);
+font: 24pt &quot;楷体&quot;;</string>
+           </property>
+           <property name="text">
+            <string>单次运行</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="pushButton_2">
+           <property name="styleSheet">
+            <string notr="true">font: 24pt &quot;楷体&quot;;
+background-color: rgb(0, 170, 0);</string>
+           </property>
+           <property name="text">
+            <string>重复运行</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="pushButton_3">
+           <property name="styleSheet">
+            <string notr="true">font: 24pt &quot;宋体&quot;;
+background-color: rgb(255, 0, 0);</string>
+           </property>
+           <property name="text">
+            <string>停止</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="3">
+          <widget class="QTextEdit" name="textEdit">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+           <property name="html">
+            <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'SimSun'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#5500ff;&quot;&gt;使用说明：&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; color:#5500ff;&quot;&gt;1、把每一步要操作的图标、区域截图保存至本文件夹  png格式（注意如果同屏有多个相同图标，回默认找到最左上的一个，因此怎么截图，截多大的区域，是个学问，如输入框只截中间空白部分肯定是不行的，宗旨就是“唯一”）&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt; color:#5500ff;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;2、在&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;cmd.x&lt;/span&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;ls &lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;的&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;sheet&lt;/span&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;1 &lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;中，配置每一步的指令，如指令类型&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;1&lt;/span&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;234  &lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;对应的内容填截图文件名（别用中文），指令&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;5&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;对应的内容是等待时长（单位秒） 指令&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;6&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;对应的内容是滚轮滚动的距离，正数表示向上滚，负数表示向下滚&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;,&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;数字大一点，先用&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;2&lt;/span&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;00&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;和&lt;/span&gt;&lt;span style=&quot; font-family:'宋体','等线'; font-size:10pt; color:#5500ff;&quot;&gt;-&lt;/span&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;200&lt;/span&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;试试&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'宋体'; font-size:10pt; color:#5500ff;&quot;&gt;3、&lt;/span&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;保存文件&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;4、开始程序后请将程序框最小化，不然程序框挡住的区域是无法识别和操作的&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;5、如果程序开始后因为你选择了无限重复而鼠标被占用停不下来，alt+F4吧~&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'等线'; font-size:10pt; color:#5500ff;&quot;&gt;6、如果出错，请把日志复制出来发给Lee分析&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>日志:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QTextEdit" name="textEdit_2">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="pushButton_4">
+        <property name="text">
+         <string>清除日志</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>single_run()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>91</x>
+     <y>372</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>97</x>
+     <y>400</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>loop_run()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>241</x>
+     <y>361</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>235</x>
+     <y>402</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_3</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>stop()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>351</x>
+     <y>374</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>351</x>
+     <y>402</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_4</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>clear_log_slot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>672</x>
+     <y>382</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>693</x>
+     <y>406</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>single_run()</slot>
+  <slot>loop_run()</slot>
+  <slot>stop()</slot>
+  <slot>clear_log_slot()</slot>
+ </slots>
+</ui>
