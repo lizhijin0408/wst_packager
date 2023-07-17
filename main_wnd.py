@@ -78,8 +78,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "自动操作工具"))
-        self.pushButton.setText(_translate("MainWindow", "单次运行"))
-        self.pushButton_2.setText(_translate("MainWindow", "重复运行"))
+        self.pushButton.setText(_translate("MainWindow", "cmd"))
+        self.pushButton_2.setText(_translate("MainWindow", "cmd2"))
         self.pushButton_3.setText(_translate("MainWindow", "停止"))
         self.textEdit.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"

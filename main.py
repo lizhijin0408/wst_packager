@@ -14,40 +14,41 @@ task_exit = False
 def mouseClick(clickTimes, lOrR, img, reTry):
     global task_exit
     if reTry == 1:
-        while True:
-            location = pyautogui.locateCenterOnScreen(img, confidence=0.9)
-            # print(location)
-            if location is not None:
-                pyautogui.click(location.x, location.y, clicks=clickTimes, interval=0.2, duration=0.2, button=lOrR)
-                break
-            if task_exit:
-                return
-            print("未找到匹配图片,0.1秒后重试")
-            time.sleep(0.1)
+        location = pyautogui.locateCenterOnScreen(img, confidence=0.9)
+        # print(location)
+        if location is not None:
+            pyautogui.click(location.x, location.y, clicks=clickTimes, interval=0.2, duration=0.2, button=lOrR)
+            return True
+        print("未找到匹配图片")
+        return False
     elif reTry == -1:
-        while True:
-            location = pyautogui.locateCenterOnScreen(img, confidence=0.9)
-            # print(location)
-            if location is not None:
+        location = pyautogui.locateCenterOnScreen(img, confidence=0.9)
+        # print(location)
+        if location is not None:
+            while True:
+                if task_exit:
+                    return True
                 pyautogui.click(location.x, location.y, clicks=clickTimes, interval=0.2, duration=0.2, button=lOrR)
-            if task_exit:
-                return
-            time.sleep(0.1)
+                time.sleep(0.1)
+        print("未找到匹配图片")
+        return False
     elif reTry > 1:
         i = 1
-        while i < reTry + 1:
-            location = pyautogui.locateCenterOnScreen(img, confidence=0.9)
-            # print(location)
-            if location is not None:
+        location = pyautogui.locateCenterOnScreen(img, confidence=0.9)
+        # print(location)
+        if location is not None:
+            while i < reTry + 1:
+                if task_exit:
+                    return True
                 pyautogui.click(location.x, location.y, clicks=clickTimes, interval=0.2, duration=0.2, button=lOrR)
                 print("重复")
                 i += 1
-            if task_exit:
-                return
-            time.sleep(0.1)
+                time.sleep(0.1)
+        print("未找到匹配图片")
+        return False
 
 # 数据检查
-# cmdType.value  1.0 左键单击    2.0 左键双击  3.0 右键单击  4.0 输入  5.0 等待  6.0 滚轮
+# cmdType.value  1.0 左键单击    2.0 左键双击  3.0 右键单击  4.0 输入  5.0 等待  6.0 滚轮 7.0 鼠标移动 8.0 单击坐标
 # ctype     空：0
 #           字符串：1
 #           数字：2
@@ -66,13 +67,15 @@ def dataCheck(sheet1):
         # 第1列 操作类型检查
         cmdType = sheet1.row(i)[0]
         if cmdType.ctype != 2 or (cmdType.value != 1.0 and cmdType.value != 2.0 and cmdType.value != 3.0
-        and cmdType.value != 4.0 and cmdType.value != 5.0 and cmdType.value != 6.0):
+                                  and cmdType.value != 4.0 and cmdType.value != 5.0 and cmdType.value != 6.0
+                                  and cmdType.value != 7.0 and cmdType.value != 8.0):
             print('第', i+1, "行,第1列数据有毛病")
             checkCmd = False
         # 第2列 内容检查
         cmdValue = sheet1.row(i)[1]
         # 读图点击类型指令，内容必须为字符串类型
-        if cmdType.value == 1.0 or cmdType.value == 2.0 or cmdType.value == 3.0:
+        if cmdType.value == 1.0 or cmdType.value == 2.0 or cmdType.value == 3.0 or cmdType.value == 7.0\
+                or cmdType.value == 8.0:
             if cmdValue.ctype != 1:
                 print('第', i+1, "行,第2列数据有毛病")
                 checkCmd = False
@@ -152,6 +155,35 @@ def mainWork(sheet1):
             scroll = sheet1.row(i)[1].value
             print("滚轮滑动", int(scroll), "距离")
             pyautogui.scroll(int(scroll))
+        #6代表鼠标移动
+        elif cmdType.value == 7.0:
+            #取图片名称
+            pos = sheet1.row(i)[1].value
+            pos_split = pos.split(',')
+            if len(pos_split) != 2:
+                print(f'鼠标移动坐标位置设置不对 {pos}')
+            else:
+                try:
+                    posx = int(pos_split[0].strip())
+                    posy = int(pos_split[1].strip())
+                    print(f"滚轮移动到 {posx} {posy}")
+                    pyautogui.moveTo(posx, posy, duration=0.25)
+                except Exception as e:
+                    print(f'鼠标移动坐标位置设置不对 {pos}')
+        #6代表单击坐标位置
+        elif cmdType.value == 8.0:
+            pos = sheet1.row(i)[1].value
+            pos_split = pos.split(',')
+            if len(pos_split) != 2:
+                print(f'鼠标移动坐标位置设置不对 {pos}')
+            else:
+                try:
+                    posx = int(pos_split[0].strip())
+                    posy = int(pos_split[1].strip())
+                    print(f"鼠标左键单击 {posx} {posy}")
+                    pyautogui.click(posx, posy, clicks=1, interval=0.2, duration=0.2, button="left")
+                except Exception as e:
+                    print(f'鼠标移动坐标位置设置不对 {pos}')
         i += 1
 
 class Stream(QtCore.QObject):
@@ -182,12 +214,12 @@ class Window(QMainWindow, Ui_MainWindow):
         self.textEdit_2.ensureCursorVisible()
 
     def single_run(self):
-        print('单次运行')
-        _thread.start_new_thread(self.luti_thread, (False,))
+        print('运行cmd.xls')
+        _thread.start_new_thread(self.luti_thread, ('cmd.xls',))
 
     def loop_run(self):
-        print('循环运行')
-        _thread.start_new_thread(self.luti_thread, (True,))
+        print('运行cmd2.xls')
+        _thread.start_new_thread(self.luti_thread, ('cmd2.xls',))
 
     def stop(self):
         print('停止运行')
@@ -195,12 +227,12 @@ class Window(QMainWindow, Ui_MainWindow):
         task_exit = True
         self.stop_run = True
 
-    def luti_thread(self, loop):
+    def luti_thread(self, file):
         global task_exit
         task_exit = False
         self.stop_run = False
         self.thread_run = True
-        file = 'cmd.xls'
+        # file = 'cmd.xls'
         self.pushButton.setEnabled(False)
         self.pushButton_2.setEnabled(False)
         print('欢迎使用Lee的自动界面操作工具~')
@@ -218,15 +250,16 @@ class Window(QMainWindow, Ui_MainWindow):
         checkCmd = dataCheck(sheet1)
         if checkCmd:
             # 循环拿出每一行指令
-            if loop:
+            # if loop:
+            if True:
                 while True:
                     if self.stop_run:
                         self.stop_run = False
                         break
                     mainWork(sheet1)
                     time.sleep(0.1)
-            else:
-                mainWork(sheet1)
+            # else:
+            #     mainWork(sheet1)
         else:
             print('输入有误或者已经退出!')
         print('自动化操作退出')
