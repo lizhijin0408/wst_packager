@@ -197,9 +197,9 @@ def mainWork(sheet1):
                     posy = int(pos_split[1].strip())
                     print(f"鼠标左键单击 {posx} {posy}")
                     # pyautogui.click(posx, posy, clicks=2, interval=0.2, duration=0.2, button="left")
-                    pyautogui.doubleClick()
+                    pyautogui.click()
                 except Exception as e:
-                    print(f'鼠标移动坐标位置设置不对 {pos}')
+                    print(e)
         #9代表滚轮(支持累加)
         elif cmdType.value == 9.0:
             #取图片名称
