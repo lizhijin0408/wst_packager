@@ -2,6 +2,7 @@ from PyQt5.Qt import *
 from PyQt5 import QtCore, QtGui
 import sys
 import pyautogui
+import pydirectinput
 import time
 import xlrd
 import pyperclip
@@ -10,6 +11,9 @@ import _thread
 from main_wnd import Ui_MainWindow
 
 task_exit = False
+
+def mouseLeftClick():
+    pyautogui.click()
 
 def mouseClick(clickTimes, lOrR, img, reTry):
     global task_exit
@@ -47,6 +51,7 @@ def mouseClick(clickTimes, lOrR, img, reTry):
         print("未找到匹配图片")
         return False
 
+scroll_pos_list = {}
 # 数据检查
 # cmdType.value  1.0 左键单击    2.0 左键双击  3.0 右键单击  4.0 输入  5.0 等待  6.0 滚轮 7.0 鼠标移动 8.0 单击坐标
 # ctype     空：0
@@ -68,7 +73,7 @@ def dataCheck(sheet1):
         cmdType = sheet1.row(i)[0]
         if cmdType.ctype != 2 or (cmdType.value != 1.0 and cmdType.value != 2.0 and cmdType.value != 3.0
                                   and cmdType.value != 4.0 and cmdType.value != 5.0 and cmdType.value != 6.0
-                                  and cmdType.value != 7.0 and cmdType.value != 8.0):
+                                  and cmdType.value != 7.0 and cmdType.value != 8.0 and cmdType.value != 9.0):
             print('第', i+1, "行,第1列数据有毛病")
             checkCmd = False
         # 第2列 内容检查
@@ -94,6 +99,13 @@ def dataCheck(sheet1):
             if cmdValue.ctype != 2:
                 print('第', i+1, "行,第2列数据有毛病")
                 checkCmd = False
+        # 滚轮事件，内容必须为数字
+        if cmdType.value == 9.0:
+            if cmdValue.ctype != 2:
+                print('第', i+1, "行,第2列数据有毛病")
+                checkCmd = False
+            else:
+                scroll_pos_list[str(i)] = 0
         i += 1
     return checkCmd
 
@@ -172,6 +184,9 @@ def mainWork(sheet1):
                     print(f'鼠标移动坐标位置设置不对 {pos}')
         #6代表单击坐标位置
         elif cmdType.value == 8.0:
+            # print("鼠标左键单击")
+            # pyautogui.click()
+            # pydirectinput.click(relative=True)
             pos = sheet1.row(i)[1].value
             pos_split = pos.split(',')
             if len(pos_split) != 2:
@@ -181,9 +196,18 @@ def mainWork(sheet1):
                     posx = int(pos_split[0].strip())
                     posy = int(pos_split[1].strip())
                     print(f"鼠标左键单击 {posx} {posy}")
-                    pyautogui.click(posx, posy, clicks=1, interval=0.2, duration=0.2, button="left")
+                    # pyautogui.click(posx, posy, clicks=2, interval=0.2, duration=0.2, button="left")
+                    pyautogui.doubleClick()
                 except Exception as e:
                     print(f'鼠标移动坐标位置设置不对 {pos}')
+        #9代表滚轮(支持累加)
+        elif cmdType.value == 9.0:
+            #取图片名称
+            scroll = sheet1.row(i)[1].value
+            scroll += scroll_pos_list[str(i)]
+            scroll_pos_list[str(i)] = scroll
+            print("滚轮滑动", int(scroll), "距离")
+            pyautogui.scroll(int(scroll))
         i += 1
 
 class Stream(QtCore.QObject):
